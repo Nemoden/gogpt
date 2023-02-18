@@ -26,7 +26,6 @@ func (r *PassthruRenderer) Render(stream *gogpt.CompletionStream) string {
 		response, err := stream.Recv()
 
 		if errors.Is(err, io.EOF) {
-			writer.WriteString("EOF: Printing a new line")
 			writer.WriteString("\n")
 			writer.Flush()
 			break

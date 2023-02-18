@@ -33,7 +33,6 @@ func (r *MarkdownRenderer) Render(stream *gogpt.CompletionStream) string {
 		response, err := stream.Recv()
 
 		if errors.Is(err, io.EOF) {
-			fmt.Fprintf(writer, "EOF: Printing a new line")
 			fmt.Fprintf(writer, "\n")
 			previousResponse = ""
 			break
