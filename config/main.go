@@ -82,9 +82,15 @@ func LoadConfig(optionsOverride []string) *Config {
 	if inSlice("--md", optionsOverride) {
 		r = renderer.NewMarkdownRenderer(os.Stdout, "ChatGPT: ")
 		format = "markdown"
+	} else if inSlice("--md2", optionsOverride) {
+		r = renderer.NewMarkdown2Renderer(os.Stdout, "ChatGPT: ")
+		format = "markdown"
+	} else if inSlice("--token", optionsOverride) {
+		r = renderer.NewTokenRenderer(os.Stdout, "ChatGPT: ")
+		format = "plain"
 	} else {
 		r = renderer.NewPassthruRenderer(os.Stdout, "ChatGPT: ")
-		format = ""
+		format = "plain"
 	}
 	return &Config{
 		Renderer: r,

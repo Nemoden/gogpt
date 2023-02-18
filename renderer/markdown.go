@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/glamour"
-	"github.com/gosuri/uilive"
+	"github.com/nemoden/uilive"
 	gogpt "github.com/sashabaranov/go-gpt3"
 )
 
