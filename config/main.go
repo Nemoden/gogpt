@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/nemoden/chat/renderer"
+	gogpt "github.com/sashabaranov/go-gpt3"
 )
 
 var (
@@ -61,11 +62,17 @@ const (
 	API_KEY_ENV_VAR_NAME = "CHAT_GPT_API_TOKEN"
 	API_KEY_SOURCE_ENV   = "env"
 	API_KEY_SOURCE_FILE  = "file"
+	FormatMarkdown       = "markdown"
+	FormatPlain          = "plain"
 )
 
 type Config struct {
-	Renderer renderer.Renderer
-	Format   string
+	Renderer     renderer.Renderer
+	Format       string
+	PromptPrefix string
+	Model        string
+	MaxTokens    int
+	Temperature  float32
 }
 
 func inSlice(what string, slice []string) bool {
@@ -77,24 +84,38 @@ func inSlice(what string, slice []string) bool {
 	return false
 }
 func LoadConfig(optionsOverride []string) *Config {
-	var r renderer.Renderer
-	var format string
+	var (
+		r            renderer.Renderer
+		format       string
+		promptPrefix string
+	)
 	if inSlice("--md", optionsOverride) {
 		r = renderer.NewMarkdownRenderer(os.Stdout, "ChatGPT: ")
-		format = "markdown"
+		format = FormatMarkdown
 	} else if inSlice("--md2", optionsOverride) {
 		r = renderer.NewMarkdown2Renderer(os.Stdout, "ChatGPT: ")
-		format = "markdown"
+		format = FormatMarkdown
 	} else if inSlice("--token", optionsOverride) {
 		r = renderer.NewTokenRenderer(os.Stdout, "ChatGPT: ")
-		format = "plain"
+		format = FormatPlain
 	} else {
 		r = renderer.NewPassthruRenderer(os.Stdout, "ChatGPT: ")
-		format = "plain"
+		format = FormatPlain
+	}
+
+	switch format {
+	case FormatMarkdown:
+		promptPrefix = "Return response in markdown format. Prompt on a new line:\n"
+	default:
+		promptPrefix = ""
 	}
 	return &Config{
-		Renderer: r,
-		Format:   format,
+		Renderer:     r,
+		Format:       format,
+		PromptPrefix: promptPrefix,
+		Model:        gogpt.GPT3TextDavinci003,
+		MaxTokens:    1000,
+		Temperature:  0.5,
 	}
 }
 

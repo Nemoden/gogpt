@@ -5,14 +5,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/nemoden/chat/chat"
 	"github.com/nemoden/chat/cmd"
 	"github.com/nemoden/chat/config"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	"github.com/nemoden/chat/util"
 )
 
 func main() {
@@ -27,23 +26,12 @@ func main() {
 		if !ok {
 			c := config.LoadConfig(options)
 			input := strings.Join(positionalArgs, " ")
-			prompt := ""
-			if c.Format == "markdown" {
-				prompt += "Return response in markdown format. Prompt on a new line:\n"
-			}
-			prompt += input
 			client, err := chat.NewClient(c)
 			if err != nil {
-				fmt.Println(err)
-				os.Exit(0)
+				util.Hangup(err)
 			}
 			ctx := context.Background()
-			request := gogpt.CompletionRequest{
-				Model:       gogpt.GPT3TextDavinci003,
-				Prompt:      prompt,
-				MaxTokens:   1000,
-				Temperature: 0.5,
-			}
+			request := chat.CompletionRequest(input, c)
 			response, _ := client.GptClient().CreateCompletionStream(ctx, request)
 			c.Renderer.Render(response)
 			os.Exit(0)

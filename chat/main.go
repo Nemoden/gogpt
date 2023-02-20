@@ -18,6 +18,16 @@ func NewClient(c *config.Config) (*Client, error) {
 	return &Client{client}, nil
 }
 
+func CompletionRequest(prompt string, c *config.Config) gogpt.CompletionRequest {
+	return gogpt.CompletionRequest{
+		Model:       c.Model,
+		Prompt:      c.PromptPrefix + prompt,
+		MaxTokens:   c.MaxTokens,
+		Temperature: c.Temperature,
+		Stream:      false,
+	}
+}
+
 func (c *Client) GptClient() *gogpt.Client {
 	return c.client
 }

@@ -6,7 +6,6 @@ package cmd
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -14,7 +13,7 @@ import (
 
 	"github.com/nemoden/chat/chat"
 	"github.com/nemoden/chat/config"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	"github.com/nemoden/chat/util"
 
 	"github.com/spf13/cobra"
 )
@@ -34,13 +33,8 @@ var rootCmd = &cobra.Command{
 		c := config.LoadConfig(options)
 		client, err := chat.NewClient(c)
 
-		if errors.Is(err, config.ErrApiTokenFileDoesntExist) {
-			fmt.Printf(config.TokenFileDoesntExistPrompt)
-			os.Exit(0)
-		}
-		if errors.Is(err, config.ErrCantOpenApiTokenFileForReading) {
-			fmt.Printf(config.TokenFileNotReadablePrompt)
-			os.Exit(0)
+		if err != nil {
+			util.Hangup(err)
 		}
 
 		ctx := context.Background()
@@ -54,17 +48,7 @@ var rootCmd = &cobra.Command{
 				break
 			}
 
-			prompt := ""
-			if c.Format == "markdown" {
-				prompt += "Return response in markdown format. Prompt on a new line:\n"
-			}
-			prompt += input
-			req := gogpt.CompletionRequest{
-				Model:       gogpt.GPT3TextDavinci003,
-				Prompt:      prompt,
-				MaxTokens:   1000,
-				Temperature: 0.5,
-			}
+			req := chat.CompletionRequest(input, c)
 
 			fmt.Printf("ChatGPT: ")
 
