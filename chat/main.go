@@ -10,11 +10,11 @@ type Client struct {
 }
 
 func NewClient(c *config.Config) (*Client, error) {
-	apiKey, _, err := config.LoadApiKey()
+	apiKey, err := config.LoadApiKey()
 	if err != nil {
 		return nil, err
 	}
-	client := gogpt.NewClient(apiKey)
+	client := gogpt.NewClient(apiKey.String())
 	return &Client{client}, nil
 }
 

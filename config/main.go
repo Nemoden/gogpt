@@ -7,18 +7,20 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 
 	"github.com/nemoden/chat/renderer"
 	gogpt "github.com/sashabaranov/go-gpt3"
+	"gopkg.in/yaml.v2"
 )
 
 var (
 	ConfigDir      string = getConfigDir()
 	CacheDir       string = getCacheDir()
 	ApiKeyFilePath string = getApiKeyFilePath()
-	InitPrompt     string = `Please initialise chat using the init command:
+	InitPrompt     string = `Please initialise chat using the config command:
 
-$ chat init
+$ chat config
 `
 	// @TODO revisit instructions
 	TokenFileDoesntExistPrompt string = fmt.Sprintf(`Oops. Looks like your token file %s doesn't exist.
@@ -29,9 +31,9 @@ Once you have the API key, you can either add it manually to %s:
 
 $ echo "<your-api-key>" > %s
 
-Or if you didn't run chat init, it's adviced that you do this instead:
+Or, if you didn't run chat config, it's adviced that you do this instead:
 
-$ chat init
+$ chat config
 
 Alternatively, you can provide a token using environment variable %s. How to set it depends on your shell, i.e. 
 
@@ -60,21 +62,64 @@ var (
 const (
 	APP_NAME             = "chat"
 	API_KEY_ENV_VAR_NAME = "CHAT_GPT_API_TOKEN"
-	API_KEY_SOURCE_ENV   = "env"
-	API_KEY_SOURCE_FILE  = "file"
-	FormatMarkdown       = "markdown"
-	FormatPlain          = "plain"
 )
 
-type Config struct {
-	Renderer     renderer.Renderer
-	Format       string
-	PromptPrefix string
-	Model        string
-	MaxTokens    int
-	Temperature  float32
+type ApiKeySource int
+type Format int
+
+const (
+	FormatMarkdown Format = iota
+	FormatPlain
+)
+
+const (
+	SourceNone ApiKeySource = iota
+	SourceEnv
+	SourceFile
+)
+
+type ApiKey struct {
+	key    string
+	Source ApiKeySource
 }
 
+func (ak ApiKey) String() string {
+	return ak.key
+}
+
+func (ak ApiKey) IsEmpty() bool {
+	return ak.key == ""
+}
+
+func (ak ApiKey) Mask() string {
+	head := 5
+	tail := 4
+	mask := 5
+	if len(ak.key) < (head + tail + mask + 1) {
+		if len(ak.key) < 4 {
+			return strings.Repeat("*", len(ak.key))
+		}
+		return strings.Join([]string{ak.key[:1], strings.Repeat("*", len(ak.key)-1)}, "")
+	}
+	return strings.Join([]string{
+		ak.key[:head],
+		strings.Repeat("*", mask),
+		ak.key[len(ak.key)-tail+1:],
+	}, "")
+}
+
+type Config struct {
+	Renderer     renderer.Renderer `yaml:"-"`
+	RendererRef  string            `yaml:"renderer,omitempty"`
+	Format       Format            `yaml:"-"`
+	PromptPrefix string            `yaml:"-"`
+	Model        string            `yaml:"model,omitempty"`
+	MaxTokens    int               `yaml:"max_tokens,omitempty"`
+	Temperature  float32           `yaml:"temperature,omitempty"`
+	apiKey       ApiKey            `yaml:"-"`
+}
+
+// :grin:
 func inSlice(what string, slice []string) bool {
 	for _, i := range slice {
 		if what == i {
@@ -83,61 +128,101 @@ func inSlice(what string, slice []string) bool {
 	}
 	return false
 }
-func LoadConfig(optionsOverride []string) *Config {
-	var (
-		r            renderer.Renderer
-		format       string
-		promptPrefix string
-	)
-	if inSlice("--md", optionsOverride) {
-		r = renderer.NewMarkdownRenderer(os.Stdout, "ChatGPT: ")
-		format = FormatMarkdown
-	} else if inSlice("--md2", optionsOverride) {
-		r = renderer.NewMarkdown2Renderer(os.Stdout, "ChatGPT: ")
-		format = FormatMarkdown
-	} else if inSlice("--token", optionsOverride) {
-		r = renderer.NewTokenRenderer(os.Stdout, "ChatGPT: ")
-		format = FormatPlain
-	} else {
-		r = renderer.NewPassthruRenderer(os.Stdout, "ChatGPT: ")
-		format = FormatPlain
-	}
 
-	switch format {
-	case FormatMarkdown:
-		promptPrefix = "Return response in markdown format. Prompt on a new line:\n"
-	default:
-		promptPrefix = ""
+func (c *Config) load() error {
+	b, err := os.ReadFile(path.Join(ConfigDir, "config.yaml"))
+	if err != nil {
+		return err
 	}
-	return &Config{
-		Renderer:     r,
-		Format:       format,
-		PromptPrefix: promptPrefix,
-		Model:        gogpt.GPT3TextDavinci003,
-		MaxTokens:    1000,
-		Temperature:  0.5,
+	err = yaml.Unmarshal(b, c)
+	if err != nil {
+		return err
 	}
+	return nil
 }
 
-func LoadApiKey() (string, string, error) {
+func LoadConfig(optionsOverride []string) *Config {
+	c := Config{}
+	c.load()
+	if inSlice("--md", optionsOverride) || c.RendererRef == "md" {
+		c.Renderer = renderer.NewMarkdownRenderer(os.Stdout, "ChatGPT: ")
+		c.Format = FormatMarkdown
+		c.RendererRef = "md"
+	} else if inSlice("--md2", optionsOverride) || c.RendererRef == "md2" {
+		c.Renderer = renderer.NewMarkdown2Renderer(os.Stdout, "ChatGPT: ")
+		c.Format = FormatMarkdown
+		c.RendererRef = "md2"
+	} else if inSlice("--token", optionsOverride) || c.RendererRef == "token" {
+		c.Renderer = renderer.NewTokenRenderer(os.Stdout, "ChatGPT: ")
+		c.Format = FormatPlain
+		c.RendererRef = "token"
+	} else {
+		c.Renderer = renderer.NewPassthruRenderer(os.Stdout, "ChatGPT: ")
+		c.Format = FormatPlain
+		c.RendererRef = "plain"
+	}
+
+	switch c.Format {
+	case FormatMarkdown:
+		c.PromptPrefix = "Return response in markdown format. Prompt on a new line:\n"
+	default:
+		c.PromptPrefix = ""
+	}
+
+	apiKey, _ := LoadApiKey()
+
+	c.apiKey = apiKey
+
+	// TODO later we want to provide this as configurable option.
+	if c.Model == "" {
+		c.Model = gogpt.GPT3TextDavinci003
+	}
+
+	if c.MaxTokens == 0 {
+		c.MaxTokens = 1000
+	}
+
+	if c.Temperature == 0.0 {
+		c.Temperature = 0.5
+	}
+
+	return &c
+}
+
+func (c *Config) UpdateApiKey(apiKey ApiKey) {
+	c.apiKey = apiKey
+}
+
+func (c *Config) ApiKey() ApiKey {
+	return c.apiKey
+}
+
+// Returns api key, source it's been pulled from, and error (if there was one)
+func LoadApiKey() (ApiKey, error) {
 	apiKey := os.Getenv(API_KEY_ENV_VAR_NAME)
 	if apiKey != "" {
-		return apiKey, API_KEY_SOURCE_ENV, nil
+		return ApiKey{
+			apiKey,
+			SourceEnv,
+		}, nil
 	}
 	_, err := os.Stat(ApiKeyFilePath)
 	if err != nil {
-		return "", "", ErrApiTokenFileDoesntExist
+		return ApiKey{}, ErrApiTokenFileDoesntExist
 	}
 	file, err := os.Open(ApiKeyFilePath)
 	if err != nil {
-		return "", "", ErrCantOpenApiTokenFileForReading
+		return ApiKey{}, ErrCantOpenApiTokenFileForReading
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanWords)
 	scanner.Scan()
-	return scanner.Text(), API_KEY_SOURCE_FILE, nil
+	return ApiKey{
+		scanner.Text(),
+		SourceFile,
+	}, nil
 }
 
 func getCacheDir() string {
@@ -177,6 +262,10 @@ func getApiKeyFilePath() string {
 	return path.Join(home, "."+APP_NAME)
 }
 
-func StoreApiToken(token string) bool {
-	return true
+func StoreApiKey(token string) (ApiKey, error) {
+	err := os.WriteFile(ApiKeyFilePath, []byte(token), 0755)
+	if err == nil {
+		return ApiKey{token, SourceFile}, nil
+	}
+	return ApiKey{}, err
 }
