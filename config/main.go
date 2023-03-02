@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/nemoden/chat/renderer"
+	"github.com/nemoden/gogpt/renderer"
 	gogpt "github.com/sashabaranov/go-gpt3"
 	"gopkg.in/yaml.v2"
 )
@@ -18,9 +18,9 @@ var (
 	ConfigDir      string = getConfigDir()
 	CacheDir       string = getCacheDir()
 	ApiKeyFilePath string = getApiKeyFilePath()
-	InitPrompt     string = `Please initialise chat using the config command:
+	InitPrompt     string = `Please initialise GoGPT using the config command:
 
-$ chat config
+$ gogpt config
 `
 	// @TODO revisit instructions
 	TokenFileDoesntExistPrompt string = fmt.Sprintf(`Oops. Looks like your token file %s doesn't exist.
@@ -31,9 +31,9 @@ Once you have the API key, you can either add it manually to %s:
 
 $ echo "<your-api-key>" > %s
 
-Or, if you didn't run chat config, it's adviced that you do this instead:
+Or, if you didn't run gogpt config, it's adviced that you do this instead:
 
-$ chat config
+$ gogpt config
 
 Alternatively, you can provide a token using environment variable %s. How to set it depends on your shell, i.e. 
 
@@ -44,7 +44,7 @@ Alternatively, you can provide a token using environment variable %s. How to set
 
 	TokenFileNotReadablePrompt string = fmt.Sprintf(`Oops. Looks like your token file %s is not readable.
 
-chat stores the api token in that file.
+GoGPT stores the api token in that file.
 
 Another option is to store the API key in the environment variable. How to set it depends on your shell, i.e. 
 
@@ -60,8 +60,8 @@ var (
 )
 
 const (
-	APP_NAME             = "chat"
-	API_KEY_ENV_VAR_NAME = "CHAT_GPT_API_TOKEN"
+	APP_NAME             = "gogpt"
+	API_KEY_ENV_VAR_NAME = "GOGPT_API_TOKEN"
 )
 
 type ApiKeySource int

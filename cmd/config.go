@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/nemoden/chat/config"
+	"github.com/nemoden/gogpt/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )

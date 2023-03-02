@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nemoden/chat/chat"
-	"github.com/nemoden/chat/cmd"
-	"github.com/nemoden/chat/config"
-	"github.com/nemoden/chat/util"
+	"github.com/nemoden/gogpt/chat"
+	"github.com/nemoden/gogpt/cmd"
+	"github.com/nemoden/gogpt/config"
+	"github.com/nemoden/gogpt/util"
 )
 
 func main() {

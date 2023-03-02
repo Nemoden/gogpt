@@ -1,4 +1,4 @@
-module github.com/nemoden/chat
+module github.com/nemoden/gogpt
 
 go 1.19
 

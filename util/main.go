@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nemoden/chat/config"
+	"github.com/nemoden/gogpt/config"
 )
 
 func Hangup(err error) {

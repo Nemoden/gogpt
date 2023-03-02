@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"github.com/nemoden/chat/config"
+	"github.com/nemoden/gogpt/config"
 	gogpt "github.com/sashabaranov/go-gpt3"
 )
 

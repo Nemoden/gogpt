@@ -11,16 +11,16 @@ import (
 
 	"os"
 
-	"github.com/nemoden/chat/chat"
-	"github.com/nemoden/chat/config"
-	"github.com/nemoden/chat/util"
+	"github.com/nemoden/gogpt/chat"
+	"github.com/nemoden/gogpt/config"
+	"github.com/nemoden/gogpt/util"
 
 	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "chat",
+	Use:   "gogpt",
 	Short: "ChatGPT CLI and REPL",
 	Long:  `Use ChatGPT not leaving your terminal`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{
