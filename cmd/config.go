@@ -167,7 +167,7 @@ func askToUpdateRenderer(c *config.Config) {
 		"md":    {Title: "Markdown", Comment: "Experimental. Renders responses as markdown"},
 		"md2":   {Title: "Markdown 2", Comment: "Experimental, enhanced. Renders responses as markdown"},
 	}
-	current := 0
+	var current string
 
 	titles := make([]string, len(options))
 	idxToRef := make(map[int]string, len(options))
@@ -176,7 +176,7 @@ func askToUpdateRenderer(c *config.Config) {
 		titles[i] = r.Title
 		idxToRef[i] = ref
 		if ref == c.RendererRef {
-			current = i
+			current = r.Title
 		}
 		i++
 	}
