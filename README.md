@@ -1,10 +1,31 @@
 GOGPT
 ===
 
-ChatGPT. In your terminal!
+**ChatGPT. In your terminal!**
 
-Roadmap
-===
+ChatGPT is awesome, and the web interface is great, but as I'm a CLI freak, I wanted ChatGPT be under my finger tips.
+
+The goal is to make the CLI as close to web experience as possible. For that matter I've implemented a REPL. But in case I need quickly ask something, I wanted this to work:
+
+```bash
+$ gogpt List sources to learn golang interfaces
+```
+
+#### Chip in!
+
+Another goal was to learn Go. Being a larva of a gopher I very much welcome contributions. Feel free to open up a PR and/or school me how to go ;)
+
+There are a few things can be done now to improve the REPL. The experimental markdown renderer, in particular. But the most wanted feature is sessions.
+
+#### CLI
+
+![](./.github/gogpt.gif)
+
+#### REPL
+
+![](./.github/repl.gif)
+
+### Roadmap
 
 - [ ] Versioning and release toolings
 - [ ] Distribute via brew, etc.
