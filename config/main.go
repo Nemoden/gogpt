@@ -61,7 +61,7 @@ var (
 
 const (
 	APP_NAME             = "gogpt"
-	API_KEY_ENV_VAR_NAME = "GOGPT_API_TOKEN"
+	API_KEY_ENV_VAR_NAME = "OPENAPI_API_KEY"
 )
 
 type ApiKeySource int
