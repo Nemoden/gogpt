@@ -11,7 +11,7 @@ import (
 	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/nemoden/uilive"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type Markdown2Renderer struct {
@@ -23,7 +23,7 @@ func NewMarkdown2Renderer(out *os.File, prefix string) *Markdown2Renderer {
 	return &Markdown2Renderer{out, prefix}
 }
 
-func (r *Markdown2Renderer) Render(stream *gogpt.CompletionStream) string {
+func (r *Markdown2Renderer) Render(stream *openai.CompletionStream) string {
 	writer := uilive.New()
 	writer.Out = r.out
 	writer.Start()

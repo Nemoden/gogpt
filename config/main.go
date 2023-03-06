@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/nemoden/gogpt/renderer"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	openai "github.com/sashabaranov/go-openai"
 	"gopkg.in/yaml.v2"
 )
 
@@ -175,7 +175,7 @@ func LoadConfig(optionsOverride []string) *Config {
 
 	// TODO later we want to provide this as configurable option.
 	if c.Model == "" {
-		c.Model = gogpt.GPT3TextDavinci003
+		c.Model = openai.GPT3TextDavinci003
 	}
 
 	if c.MaxTokens == 0 {

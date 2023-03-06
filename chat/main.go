@@ -2,11 +2,11 @@ package chat
 
 import (
 	"github.com/nemoden/gogpt/config"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	openapi "github.com/sashabaranov/go-openai"
 )
 
 type Client struct {
-	client *gogpt.Client
+	client *openapi.Client
 }
 
 func NewClient(c *config.Config) (*Client, error) {
@@ -14,12 +14,12 @@ func NewClient(c *config.Config) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := gogpt.NewClient(apiKey.String())
+	client := openapi.NewClient(apiKey.String())
 	return &Client{client}, nil
 }
 
-func CompletionRequest(prompt string, c *config.Config) gogpt.CompletionRequest {
-	return gogpt.CompletionRequest{
+func CompletionRequest(prompt string, c *config.Config) openapi.CompletionRequest {
+	return openapi.CompletionRequest{
 		Model:       c.Model,
 		Prompt:      c.PromptPrefix + prompt,
 		MaxTokens:   c.MaxTokens,
@@ -28,6 +28,6 @@ func CompletionRequest(prompt string, c *config.Config) gogpt.CompletionRequest 
 	}
 }
 
-func (c *Client) GptClient() *gogpt.Client {
+func (c *Client) GptClient() *openapi.Client {
 	return c.client
 }

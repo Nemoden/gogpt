@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	gogpt "github.com/sashabaranov/go-gpt3"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type TokenRenderer struct {
@@ -19,7 +19,7 @@ func NewTokenRenderer(out *os.File, prefix string) *TokenRenderer {
 	return &TokenRenderer{out, prefix}
 }
 
-func (r *TokenRenderer) Render(stream *gogpt.CompletionStream) string {
+func (r *TokenRenderer) Render(stream *openai.CompletionStream) string {
 	var token string
 	wholeResponse := ""
 	for {
