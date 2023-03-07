@@ -15,15 +15,15 @@ $ gogpt List sources to learn golang interfaces
 
 Another goal was to learn Go. Being a larva of a gopher I very much welcome contributions. Feel free to open up a PR and/or school me how to go ;)
 
-There are a few things can be done now to improve the REPL. The experimental markdown renderer, in particular. But the most wanted feature is sessions.
+There are a few things can be done now to improve the REPL, the experimental markdown renderer, in particular.
+
+### REPL with chat capabilities
+
+![](./.github/chat.gif)
 
 ### CLI
 
 ![](./.github/gogpt.gif)
-
-### REPL
-
-![](./.github/repl.gif)
 
 ## Install
 
@@ -66,7 +66,6 @@ Simply delete the binary and (if they exist)
 - [ ] Nicer REPL (formatting, colors etc)
 - [ ] Enhancements to `gogpt config` command: more configurable options (max tokens, temperature etc)
 - [ ] Configurable prompts (i.e. "Write me `<essay>` in the style of `<John Doe>`" where user only needs to type `<essay>` and `<John Doe>`)
-- [ ] REPL Sessions (make pass previous context in the next request, i.e. ask something, hit enter, ask to elaborate on previous response)
 - [ ] REPL History (up/down arrows)
 - [ ] REPL Ctrl+Enter to enter a new line
 - [ ] REPL Option+B / Option+F to jump words, Ctrl+W to delete backward, etc, all the shell goodies to navigate (or vim-like nav?)
