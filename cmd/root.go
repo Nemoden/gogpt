@@ -1,11 +1,7 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"strings"
 
@@ -28,35 +24,27 @@ var rootCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		reader := bufio.NewReader(os.Stdin)
-
 		options := getOptions(os.Args[1:])
 		c := config.LoadConfig(options)
-		client, err := chat.NewClient(c)
+		ch, err := chat.New(c)
 
 		if err != nil {
 			util.Hangup(err)
 		}
 
-		ctx := context.Background()
-
 		for {
 			fmt.Printf("You: ")
 			input, _ := reader.ReadString('\n')
 			input = strings.TrimSpace(input)
-
 			if input == "exit" {
 				break
 			}
 
-			req := chat.CompletionRequest(input, c)
-
 			fmt.Printf("ChatGPT: ")
-
-			stream, _ := client.GptClient().CreateCompletionStream(ctx, req)
-
-			defer stream.Close()
-
-			c.Renderer.Render(stream)
+			err = ch.AskAndRender(input)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	},
 }

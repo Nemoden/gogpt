@@ -8,7 +8,6 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/nemoden/uilive"
-	openai "github.com/sashabaranov/go-openai"
 )
 
 type MarkdownRenderer struct {
@@ -20,7 +19,8 @@ func NewMarkdownRenderer(out *os.File, prefix string) *MarkdownRenderer {
 	return &MarkdownRenderer{out, prefix}
 }
 
-func (r *MarkdownRenderer) Render(stream *openai.CompletionStream) string {
+func (r *MarkdownRenderer) Render(stream StreamResponseAdapter) string {
+	defer stream.Close()
 	glamourRenderer, _ := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithEmoji(), glamour.WithPreservedNewLines())
 	writer := uilive.New()
 	writer.Out = r.out

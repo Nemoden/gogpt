@@ -1,10 +1,6 @@
-/*
-Copyright © 2023 Kirill Kovalchuk <the.nemoden@gmail.com>
-*/
 package main
 
 import (
-	"context"
 	"os"
 	"strings"
 
@@ -26,14 +22,14 @@ func main() {
 		if !ok {
 			c := config.LoadConfig(options)
 			input := strings.Join(positionalArgs, " ")
-			client, err := chat.NewClient(c)
+			ch, err := chat.New(c)
 			if err != nil {
 				util.Hangup(err)
 			}
-			ctx := context.Background()
-			request := chat.CompletionRequest(input, c)
-			response, _ := client.GptClient().CreateCompletionStream(ctx, request)
-			c.Renderer.Render(response)
+			err = ch.AskAndRender(input)
+			if err != nil {
+				util.Hangup(err)
+			}
 			os.Exit(0)
 		}
 	}

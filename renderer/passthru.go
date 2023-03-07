@@ -5,8 +5,6 @@ import (
 	"errors"
 	"io"
 	"os"
-
-	openai "github.com/sashabaranov/go-openai"
 )
 
 // Passthru renderer simlpy passes thru the response from ChatGPT API and renders it as is.
@@ -19,7 +17,8 @@ func NewPassthruRenderer(out *os.File, prefix string) *PassthruRenderer {
 	return &PassthruRenderer{out, prefix}
 }
 
-func (r *PassthruRenderer) Render(stream *openai.CompletionStream) string {
+func (r *PassthruRenderer) Render(stream StreamResponseAdapter) string {
+	defer stream.Close()
 	wholeResponse := ""
 	writer := bufio.NewWriter(r.out)
 	for {

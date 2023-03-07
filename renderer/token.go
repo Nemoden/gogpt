@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	openai "github.com/sashabaranov/go-openai"
 )
 
 type TokenRenderer struct {
@@ -19,7 +17,8 @@ func NewTokenRenderer(out *os.File, prefix string) *TokenRenderer {
 	return &TokenRenderer{out, prefix}
 }
 
-func (r *TokenRenderer) Render(stream *openai.CompletionStream) string {
+func (r *TokenRenderer) Render(stream StreamResponseAdapter) string {
+	defer stream.Close()
 	var token string
 	wholeResponse := ""
 	for {

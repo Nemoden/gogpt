@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/nemoden/gogpt/renderer"
-	openai "github.com/sashabaranov/go-openai"
 	"gopkg.in/yaml.v2"
 )
 
@@ -109,14 +108,13 @@ func (ak ApiKey) Mask() string {
 }
 
 type Config struct {
-	Renderer     renderer.Renderer `yaml:"-"`
-	RendererRef  string            `yaml:"renderer,omitempty"`
-	Format       Format            `yaml:"-"`
-	PromptPrefix string            `yaml:"-"`
-	Model        string            `yaml:"model,omitempty"`
-	MaxTokens    int               `yaml:"max_tokens,omitempty"`
-	Temperature  float32           `yaml:"temperature,omitempty"`
-	apiKey       ApiKey            `yaml:"-"`
+	Renderer                  renderer.Renderer `yaml:"-"`
+	RendererRef               string            `yaml:"renderer,omitempty"`
+	Format                    Format            `yaml:"-"`
+	InitialSystemInstructions []string          `yaml:"-"`
+	MaxTokens                 int               `yaml:"max_tokens,omitempty"`
+	Temperature               float32           `yaml:"temperature,omitempty"`
+	apiKey                    ApiKey            `yaml:"-"`
 }
 
 // :grin:
@@ -164,19 +162,14 @@ func LoadConfig(optionsOverride []string) *Config {
 
 	switch c.Format {
 	case FormatMarkdown:
-		c.PromptPrefix = "Return response in markdown format. Prompt on a new line:\n"
+		c.InitialSystemInstructions = []string{}
 	default:
-		c.PromptPrefix = ""
+		c.InitialSystemInstructions = []string{}
 	}
 
 	apiKey, _ := LoadApiKey()
 
 	c.apiKey = apiKey
-
-	// TODO later we want to provide this as configurable option.
-	if c.Model == "" {
-		c.Model = openai.GPT3TextDavinci003
-	}
 
 	if c.MaxTokens == 0 {
 		c.MaxTokens = 1000

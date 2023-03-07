@@ -11,7 +11,6 @@ import (
 	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/nemoden/uilive"
-	openai "github.com/sashabaranov/go-openai"
 )
 
 type Markdown2Renderer struct {
@@ -23,7 +22,8 @@ func NewMarkdown2Renderer(out *os.File, prefix string) *Markdown2Renderer {
 	return &Markdown2Renderer{out, prefix}
 }
 
-func (r *Markdown2Renderer) Render(stream *openai.CompletionStream) string {
+func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
+	defer stream.Close()
 	writer := uilive.New()
 	writer.Out = r.out
 	writer.Start()
