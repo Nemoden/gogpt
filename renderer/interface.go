@@ -1,6 +1,9 @@
 package renderer
 
 import (
+	"bufio"
+	"strings"
+
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -22,6 +25,27 @@ type StreamResponse struct {
 type StreamResponseAdapter interface {
 	Recv() (StreamResponse, error)
 	Close()
+}
+
+func ReadStreamLineByLine(s StreamResponseAdapter) (string, error) {
+	var buffer strings.Builder
+	var tok string
+	var scanner *bufio.Scanner
+	for {
+		res, err := s.Recv()
+		tok = res.Choices[0].Text
+		if len(tok) == 0 {
+			continue
+		}
+		if err != nil {
+			return "", err
+		}
+		buffer.WriteString(tok)
+		scanner = bufio.NewScanner(strings.NewReader(buffer.String()))
+		for scanner.Scan() {
+			return scanner.Text(), nil
+		}
+	}
 }
 
 type ChatCompletionStreamResponseAdapter struct {

@@ -7,10 +7,10 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
-
-	"github.com/nemoden/uilive"
+	"github.com/pzl/tui/ansi"
 )
 
 type Markdown2Renderer struct {
@@ -24,9 +24,8 @@ func NewMarkdown2Renderer(out *os.File, prefix string) *Markdown2Renderer {
 
 func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
 	defer stream.Close()
-	writer := uilive.New()
-	writer.Out = r.out
-	writer.Start()
+
+	w := ansi.NewWriter(nil)
 
 	wholeResponse := ""
 	currentBlock := ""
@@ -44,7 +43,6 @@ func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
 
 		if errors.Is(err, io.EOF) {
 			//wholeBlocksRendered = append(wholeBlocksRendered, currentBlock)
-			writer.Stop()
 			fmt.Printf("\n")
 			break
 		}
@@ -54,14 +52,11 @@ func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
 			token = response.Choices[0].Text
 			wholeResponse += token
 
-			if token == "\n" && lastToken == "\n" && insideMarkdownCodeBlockBytes == 0 {
+			if len(lastToken) > 0 && token[len(token)-1] == '\n' && lastToken[len(lastToken)-1] == '\n' && insideMarkdownCodeBlockBytes == 0 {
 				blocks += 1
-				writer.Stop()
-				// Start new writer
-				writer = uilive.New()
-				writer.Out = r.out
-				writer.Start()
-				//wholeBlocksRendered = append(wholeBlocksRendered, currentBlock)
+				fmt.Println("BLOCK!")
+				time.Sleep(time.Second)
+
 				currentBlock = ""
 				continue
 			}
@@ -78,16 +73,25 @@ func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
 			} else {
 				curPrintMd = string(markdown.Render(currentBlock, 80, 4))
 			}
-			fmt.Fprintln(writer, curPrintMd)
-			//fmt.Fprintln(writer, currentBlock)
+			for i := 0; i < countLines(currentBlock); i++ {
+				w.Column(0)
+				w.ClearLineRight()
+				if i != countLines(currentBlock) {
+					w.Up(100)
+				}
+			}
+			fmt.Println(curPrintMd)
 
 			lastToken = token
 		}
 	}
-	//for _, b := range wholeBlocksRendered {
-	//fmt.Printf("---\n%s\n---\n", b)
-	//}
+	fmt.Printf("%d blocks\n", blocks)
+	fmt.Println(wholeResponse)
 	return wholeResponse
+}
+
+func countLines(b string) int {
+	return len(strings.Split(b, "\n"))
 }
 
 func isInsideMarkdownCodeBlock(str string) int {
