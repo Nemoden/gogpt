@@ -10,7 +10,6 @@ import (
 	"time"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
-	"github.com/pzl/tui/ansi"
 )
 
 type Markdown2Renderer struct {
@@ -22,27 +21,87 @@ func NewMarkdown2Renderer(out *os.File, prefix string) *Markdown2Renderer {
 	return &Markdown2Renderer{out, prefix}
 }
 
+func render(s string) string {
+	return string(markdown.Render(s, 80, 4))
+}
+
+type rrr struct {
+	tokens  []string
+	text    string
+	curline int
+}
+
+func (r *rrr) Add(t string) {
+	r.tokens = append(r.tokens, t)
+}
+
+func up() {
+	fmt.Print("\033[1A\r")
+}
+
+func col0() {
+	fmt.Print("\033[0G\r")
+}
+
+func clearRight() {
+	fmt.Print("\033[K\r")
+}
+
+func cleanLines(n int) {
+	for i := n; i > 0; i-- {
+		up()
+		time.Sleep(time.Millisecond * 300)
+		//fmt.Print("col0")
+		col0()
+		//fmt.Print("CLEAR:")
+		time.Sleep(time.Millisecond * 300)
+		clearRight()
+		time.Sleep(time.Millisecond * 300)
+		//if i != 1 {
+		//}
+	}
+}
+
+func (r *rrr) Render() {
+	s := strings.Join(r.tokens, "")
+	md := render(s)
+	// rendered lines
+	mdlines := strings.Split(strings.Trim(md, "\n"), "\n")
+	mdlen := len(mdlines)
+	if mdlen == 0 {
+		return
+	}
+	r.curline = mdlen
+	last := mdlines[mdlen-1]
+	//for i := 0; i < mdlen; i++ {
+	//fmt.Printf("LineIdx:%d, Line: %s\n", i, mdlines[i])
+	//}
+	//time.Sleep(600)
+	// rendered previous line, start new one
+	cleanLines(1)
+	//fmt.Printf("%+v %d >>>%s<<< curline %d", mdlines, mdlen, mdlines[mdlen-1], r.curline)
+	fmt.Print(last)
+	time.Sleep(time.Millisecond * 300)
+}
+
 func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
 	defer stream.Close()
 
-	w := ansi.NewWriter(nil)
+	//w := ansi.NewWriter(nil)
 
 	wholeResponse := ""
-	currentBlock := ""
 	var token string
-	var lastToken string
 	tokens := 0
-	blocks := 0
+
+	rr := &rrr{}
 
 	//wholeBlocksRendered := make([]string, 0)
 
 	curPrintMd := ""
-	insideMarkdownCodeBlockBytes := 0
 	for {
 		response, err := stream.Recv()
 
 		if errors.Is(err, io.EOF) {
-			//wholeBlocksRendered = append(wholeBlocksRendered, currentBlock)
 			fmt.Printf("\n")
 			break
 		}
@@ -52,41 +111,12 @@ func (r *Markdown2Renderer) Render(stream StreamResponseAdapter) string {
 			token = response.Choices[0].Text
 			wholeResponse += token
 
-			if len(lastToken) > 0 && token[len(token)-1] == '\n' && lastToken[len(lastToken)-1] == '\n' && insideMarkdownCodeBlockBytes == 0 {
-				blocks += 1
-				fmt.Println("BLOCK!")
-				time.Sleep(time.Second)
-
-				currentBlock = ""
-				continue
-			}
-			currentBlock += token
-			if insideMarkdownCodeBlockBytes == 0 {
-				insideMarkdownCodeBlockBytes = isInsideMarkdownCodeBlock(currentBlock)
-			}
-			if insideMarkdownCodeBlockBytes > 0 && strings.HasSuffix(currentBlock, "```") && len(currentBlock) > (insideMarkdownCodeBlockBytes+3) {
-				insideMarkdownCodeBlockBytes = 0
-			}
-
-			if insideMarkdownCodeBlockBytes > 0 {
-				curPrintMd = string(markdown.Render(currentBlock+"\n```", 80, 4))
-			} else {
-				curPrintMd = string(markdown.Render(currentBlock, 80, 4))
-			}
-			for i := 0; i < countLines(currentBlock); i++ {
-				w.Column(0)
-				w.ClearLineRight()
-				if i != countLines(currentBlock) {
-					w.Up(100)
-				}
-			}
+			rr.Add(token)
+			rr.Render()
 			fmt.Println(curPrintMd)
 
-			lastToken = token
 		}
 	}
-	fmt.Printf("%d blocks\n", blocks)
-	fmt.Println(wholeResponse)
 	return wholeResponse
 }
 

@@ -71,3 +71,42 @@ Simply delete the binary and (if they exist)
 - [ ] REPL Option+B / Option+F to jump words, Ctrl+W to delete backward, etc, all the shell goodies to navigate (or vim-like nav?)
 - [ ] REPL Completions and commands, i.e. something like what postgresql has, or redis, i.e. being able to type `\config renderer=markdown`, or `\prompt ...`
 - [ ] Put all of the above into github issues for tracking and making it easier to collab
+
+
+
+type BufferedLines struct {
+    tokens []string
+    lines []string
+    lines_count int
+    CodeBlockLineStart int // -1
+    is_code_block_incomplete bool
+}
+
+type RenderLine {
+    line string
+    rendered bool
+}
+
+type LinesRenderer struct {
+    lines []string
+    lines_count int
+}
+
+var bufferred_lines BufferedLines
+var lines_renderer LinesRenderer
+
+for {
+    bufferred_lines.Add(stream.next())
+    if bufferred_lines.HasCodeBlock() {
+        if (bufferred_lines.HasLinesBeforeCodeBlock()) {
+            lines_renderer.AddLines( buffered_lines.SplitLinesBeforeCodeAndRemove() )
+            lines_renderer.Render()
+        } else {
+            lines_renderer.AddLines( buffered_lines.GetCodeLines() )
+            lines_renderer.Render()
+        }
+    }
+
+    if bufferred_lines.HasTable() {
+    }
+}
